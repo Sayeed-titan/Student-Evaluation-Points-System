@@ -16,6 +16,12 @@ namespace StudentPointsSystem
             {
                   InitializeComponent ( );
 
+                  this . DoubleBuffered = true;
+                  this . SetStyle ( ControlStyles . OptimizedDoubleBuffer |
+                                ControlStyles . AllPaintingInWmPaint |
+                                ControlStyles . UserPaint , true );
+                  this . UpdateStyles ( );
+
 
                   // In each form with DataGridView:
                   dgvRecentActivities . BorderStyle = BorderStyle . None;
@@ -36,6 +42,61 @@ namespace StudentPointsSystem
                   dgvRecentActivities . GridColor = Color . FromArgb ( 230 , 230 , 230 );
 
 
+            }
+
+            private void ApplyModernTheme ( )
+            {
+                  // Main form
+                  this . BackColor = Color . FromArgb ( 240 , 244 , 248 );
+
+                  // Title
+                  titleLabel . Font = new Font ( "Segoe UI" , 22F , FontStyle . Bold );
+                  titleLabel . ForeColor = Color . FromArgb ( 32 , 32 , 32 );
+
+                  // Stats Panel
+                  statsPanel . BackColor = Color . White;
+                  statsPanel . Padding = new Padding ( 25 );
+                  lblActiveStudents . Font = new Font ( "Segoe UI" , 12F );
+                  lblTodayActivities . Font = new Font ( "Segoe UI" , 12F );
+                  lblPendingCalculation . Font = new Font ( "Segoe UI" , 12F );
+
+                  // Actions Panel
+                  actionsPanel . BackColor = Color . White;
+                  actionsPanel . Padding = new Padding ( 25 );
+                  actionsTitle . Font = new Font ( "Segoe UI" , 16F , FontStyle . Bold );
+
+                  // Buttons - Primary
+                  Color primaryBlue = Color.FromArgb(0, 120, 212);
+                  foreach ( Control ctrl in actionsPanel . Controls )
+                  {
+                        if ( ctrl is Button btn )
+                        {
+                              btn . BackColor = primaryBlue;
+                              btn . ForeColor = Color . White;
+                              btn . FlatStyle = FlatStyle . Flat;
+                              btn . FlatAppearance . BorderSize = 0;
+                              btn . Font = new Font ( "Segoe UI" , 10F );
+                              btn . Cursor = Cursors . Hand;
+                              btn . Height = 45;
+
+                              // Add hover effect
+                              btn . MouseEnter += ( s , e ) => btn . BackColor = Color . FromArgb ( 0 , 99 , 177 );
+                              btn . MouseLeave += ( s , e ) => btn . BackColor = primaryBlue;
+                        }
+                  }
+
+                  // DataGridView
+                  dgvRecentActivities . BorderStyle = BorderStyle . None;
+                  dgvRecentActivities . BackgroundColor = Color . White;
+                  dgvRecentActivities . AlternatingRowsDefaultCellStyle . BackColor = Color . FromArgb ( 248 , 249 , 250 );
+                  dgvRecentActivities . ColumnHeadersDefaultCellStyle . BackColor = primaryBlue;
+                  dgvRecentActivities . ColumnHeadersDefaultCellStyle . ForeColor = Color . White;
+                  dgvRecentActivities . ColumnHeadersDefaultCellStyle . Font = new Font ( "Segoe UI" , 10F , FontStyle . Bold );
+                  dgvRecentActivities . ColumnHeadersHeight = 40;
+                  dgvRecentActivities . EnableHeadersVisualStyles = false;
+                  dgvRecentActivities . RowTemplate . Height = 35;
+                  dgvRecentActivities . CellBorderStyle = DataGridViewCellBorderStyle . SingleHorizontal;
+                  dgvRecentActivities . GridColor = Color . FromArgb ( 230 , 230 , 230 );
             }
 
             public class RoundedPanel : Panel
@@ -64,82 +125,325 @@ namespace StudentPointsSystem
                   }
             }
 
-            //private void AddDashboardChart ( )
-            //{
-            //      Chart chartStudentPoints = new Chart();
-            //      chartStudentPoints . Location = new Point ( 20 , 650 );
-            //      chartStudentPoints . Size = new Size ( 550 , 300 );
-            //      chartStudentPoints . BackColor = Color . White;
+            private void AddAllCharts ( )
+            {
+                  int leftMargin = 20;
+                  int horizontalSpacing = 20;
+                  int verticalSpacing = 30;
 
-            //      // Add Chart Area
-            //      ChartArea chartArea = new ChartArea("MainArea");
-            //      chartArea . BackColor = Color . White;
-            //      chartStudentPoints . ChartAreas . Add ( chartArea );
+                  // Start below the data table (676px height + some spacing)
+                  int currentY = 676 + 40;
 
-            //      // Add Series
-            //      Series series = new Series("Student Points");
-            //      series . ChartType = SeriesChartType . Column;
-            //      series . Color = Color . FromArgb ( 0 , 120 , 212 );
-            //      series . IsValueShownAsLabel = true;
-            //      chartStudentPoints . Series . Add ( series );
+                  // Calculate chart dimensions - 2 charts per row
+                  // Total width: 1200 - margins - spacing = 1160
+                  int chartWidth = (1200 - (leftMargin * 2) - horizontalSpacing) / 2;
+                  int chartHeight = 350;
 
-            //      // Add Title
-            //      Title title = new Title("Top 3 Students This Week");
-            //      title . Font = new Font ( "Segoe UI" , 14F , FontStyle . Bold );
-            //      chartStudentPoints . Titles . Add ( title );
+                  // Row 1: Top Students (Column) and Activity Distribution (Pie)
+                  Chart chartTopStudents = CreateTopStudentsChart();
+                  chartTopStudents . Location = new Point ( leftMargin , currentY );
+                  chartTopStudents . Size = new Size ( chartWidth , chartHeight );
+                  dashboardPanel . Controls . Add ( chartTopStudents );
 
-            //      // Load data from database
-            //      LoadChartData ( chartStudentPoints );
+                  Chart chartPie = CreateActivityPieChart();
+                  chartPie . Location = new Point ( leftMargin + chartWidth + horizontalSpacing , currentY );
+                  chartPie . Size = new Size ( chartWidth , chartHeight );
+                  dashboardPanel . Controls . Add ( chartPie );
 
-            //      // Add to form
-            //      dashboardPanel . Controls . Add ( chartStudentPoints );
-            //}
+                  currentY += chartHeight + verticalSpacing;
 
-            //private void LoadChartData ( Chart chart )
-            //{
-            //      try
-            //      {
-            //            using ( SqlConnection conn = new SqlConnection ( connectionString ) )
-            //            {
-            //                  conn . Open ( );
-            //                  SqlCommand cmd = new SqlCommand(@"
-            //    SELECT TOP 3 
-            //        s.StudentName, 
-            //        ISNULL(SUM(da.PointsEarned), 0) AS TotalPoints
-            //    FROM Students s
-            //    LEFT JOIN DailyActivities da ON s.StudentID = da.StudentID 
-            //        AND da.ActivityDate >= DATEADD(DAY, -7, GETDATE())
-            //        AND da.IsCalculated = 1
-            //    WHERE s.IsActive = 1
-            //    GROUP BY s.StudentID, s.StudentName
-            //    ORDER BY TotalPoints DESC", conn);
+                  // Row 2: Weekly Points Distribution and Points Trend
+                  Chart chartWeekly = CreateWeeklyPointsChart();
+                  chartWeekly . Location = new Point ( leftMargin , currentY );
+                  chartWeekly . Size = new Size ( chartWidth , chartHeight );
+                  dashboardPanel . Controls . Add ( chartWeekly );
 
-            //                  SqlDataReader reader = cmd.ExecuteReader();
-            //                  Series series = chart.Series[0];
+                  Chart chartProgress = CreateProgressChart();
+                  chartProgress . Location = new Point ( leftMargin + chartWidth + horizontalSpacing , currentY );
+                  chartProgress . Size = new Size ( chartWidth , chartHeight );
+                  dashboardPanel . Controls . Add ( chartProgress );
 
-            //                  while ( reader . Read ( ) )
-            //                  {
-            //                        string name = reader["StudentName"].ToString();
-            //                        int points = Convert.ToInt32(reader["TotalPoints"]);
-            //                        series . Points . AddXY ( name , points );
-            //                  }
+                  currentY += chartHeight + verticalSpacing;
 
-            //                  reader . Close ( );
-            //            }
-            //      }
-            //      catch ( Exception ex )
-            //      {
-            //            MessageBox . Show ( $"Error loading chart: {ex . Message}" , "Error" ,
-            //                MessageBoxButtons . OK , MessageBoxIcon . Error );
-            //      }
-            //}
+                  // Set minimum size for panel to enable scrolling
+                  dashboardPanel . AutoScrollMinSize = new Size ( 1200 , currentY );
+            }
+
+            private Chart CreateTopStudentsChart ( )
+            {
+                  Chart chart = new Chart();
+                  chart . BackColor = Color . White;
+
+                  // Chart Area
+                  ChartArea chartArea = new ChartArea("MainArea");
+                  chartArea . BackColor = Color . White;
+                  chartArea . AxisX . MajorGrid . Enabled = false;
+                  chartArea . AxisY . MajorGrid . LineColor = Color . LightGray;
+                  chartArea . AxisX . LabelStyle . Angle = -45;
+                  chart . ChartAreas . Add ( chartArea );
+
+                  // Series
+                  Series series = new Series("Student Points");
+                  series . ChartType = SeriesChartType . Column;
+                  series . Color = Color . FromArgb ( 0 , 120 , 212 );
+                  series . IsValueShownAsLabel = true;
+                  series . Font = new Font ( "Segoe UI" , 9F , FontStyle . Bold );
+                  chart . Series . Add ( series );
+
+                  // Title
+                  Title title = new Title("Top 3 Students This Week");
+                  title . Font = new Font ( "Segoe UI" , 14F , FontStyle . Bold );
+                  chart . Titles . Add ( title );
+
+                  // Load data
+                  LoadTopStudentsData ( chart );
+
+                  return chart;
+            }
+
+            private void LoadTopStudentsData ( Chart chart )
+            {
+                  try
+                  {
+                        using ( SqlConnection conn = new SqlConnection ( connectionString ) )
+                        {
+                              conn . Open ( );
+                              SqlCommand cmd = new SqlCommand(@"
+                SELECT TOP 3 
+                    s.StudentName, 
+                    ISNULL(SUM(da.PointsEarned), 0) AS TotalPoints
+                FROM Students s
+                LEFT JOIN DailyActivities da ON s.StudentID = da.StudentID 
+                    AND da.ActivityDate >= DATEADD(DAY, -7, GETDATE())
+                    AND da.IsCalculated = 1
+                WHERE s.IsActive = 1
+                GROUP BY s.StudentID, s.StudentName
+                ORDER BY TotalPoints DESC", conn);
+
+                              SqlDataReader reader = cmd.ExecuteReader();
+                              Series series = chart.Series[0];
+
+                              while ( reader . Read ( ) )
+                              {
+                                    string name = reader["StudentName"].ToString();
+                                    int points = Convert.ToInt32(reader["TotalPoints"]);
+                                    series . Points . AddXY ( name , points );
+                              }
+
+                              reader . Close ( );
+                        }
+                  }
+                  catch ( Exception ex )
+                  {
+                        MessageBox . Show ( $"Error loading chart: {ex . Message}" , "Error" ,
+                            MessageBoxButtons . OK , MessageBoxIcon . Error );
+                  }
+            }
+
+            private Chart CreateWeeklyPointsChart ( )
+            {
+                  Chart chart = new Chart();
+                  chart . BackColor = Color . White;
+
+                  // Chart Area
+                  ChartArea area = new ChartArea();
+                  area . AxisX . LabelStyle . Angle = -45;
+                  area . AxisX . MajorGrid . Enabled = false;
+                  area . AxisY . MajorGrid . LineColor = Color . LightGray;
+                  chart . ChartAreas . Add ( area );
+
+                  // Series
+                  Series series = new Series("Points");
+                  series . ChartType = SeriesChartType . Column;
+                  series . Color = Color . FromArgb ( 0 , 120 , 212 );
+                  series . IsValueShownAsLabel = true;
+                  series . Font = new Font ( "Segoe UI" , 9F , FontStyle . Bold );
+                  chart . Series . Add ( series );
+
+                  // Title
+                  chart . Titles . Add ( new Title ( "Weekly Points Distribution" ,
+                      Docking . Top , new Font ( "Segoe UI" , 14F , FontStyle . Bold ) , Color . Black ) );
+
+                  return chart;
+            }
+
+            private Chart CreateProgressChart ( )
+            {
+                  Chart chart = new Chart();
+                  chart . BackColor = Color . White;
+
+                  ChartArea area = new ChartArea();
+                  area . AxisX . Title = "Date";
+                  area . AxisY . Title = "Points";
+                  area . AxisX . MajorGrid . LineColor = Color . LightGray;
+                  area . AxisY . MajorGrid . LineColor = Color . LightGray;
+                  area . AxisX . LabelStyle . Angle = -45;
+                  chart . ChartAreas . Add ( area );
+
+                  Series series = new Series("Progress");
+                  series . ChartType = SeriesChartType . Line;
+                  series . Color = Color . FromArgb ( 76 , 175 , 80 );
+                  series . BorderWidth = 3;
+                  series . MarkerStyle = MarkerStyle . Circle;
+                  series . MarkerSize = 8;
+                  series . MarkerColor = Color . FromArgb ( 76 , 175 , 80 );
+                  chart . Series . Add ( series );
+
+                  chart . Titles . Add ( new Title ( "Points Trend (Last 7 Days)" ,
+                      Docking . Top , new Font ( "Segoe UI" , 14F , FontStyle . Bold ) , Color . Black ) );
+
+                  // Load data
+                  LoadProgressData ( chart );
+
+                  return chart;
+            }
+
+            private void LoadProgressData ( Chart chart )
+            {
+                  try
+                  {
+                        using ( SqlConnection conn = new SqlConnection ( connectionString ) )
+                        {
+                              conn . Open ( );
+                              SqlCommand cmd = new SqlCommand(@"
+                SELECT 
+                    da.ActivityDate,
+                    SUM(da.PointsEarned) AS DailyTotal
+                FROM DailyActivities da
+                WHERE da.ActivityDate >= DATEADD(DAY, -7, GETDATE())
+                AND da.IsCalculated = 1
+                GROUP BY da.ActivityDate
+                ORDER BY da.ActivityDate", conn);
+
+                              SqlDataReader reader = cmd.ExecuteReader();
+                              Series series = chart.Series[0];
+
+                              while ( reader . Read ( ) )
+                              {
+                                    DateTime date = Convert.ToDateTime(reader["ActivityDate"]);
+                                    int points = Convert.ToInt32(reader["DailyTotal"]);
+                                    series . Points . AddXY ( date . ToShortDateString ( ) , points );
+                              }
+
+                              reader . Close ( );
+                        }
+                  }
+                  catch ( Exception ex )
+                  {
+                        MessageBox . Show ( $"Error loading progress chart: {ex . Message}" , "Error" ,
+                            MessageBoxButtons . OK , MessageBoxIcon . Error );
+                  }
+            }
+
+            private Chart CreateActivityPieChart ( )
+            {
+                  Chart chart = new Chart();
+                  chart . BackColor = Color . White;
+
+                  ChartArea area = new ChartArea();
+                  chart . ChartAreas . Add ( area );
+
+                  Series series = new Series("DailyActivities");
+                  series . ChartType = SeriesChartType . Pie;
+                  series . IsValueShownAsLabel = true;
+                  series . Label = "#PERCENT{P0}";
+                  series . LegendText = "#VALX";
+                  chart . Series . Add ( series );
+
+                  // Add Legend
+                  Legend legend = new Legend();
+                  legend . Docking = Docking . Right;
+                  legend . Font = new Font ( "Segoe UI" , 9F );
+                  chart . Legends . Add ( legend );
+
+                  chart . Titles . Add ( new Title ( "Activity Type Distribution" ,
+                      Docking . Top , new Font ( "Segoe UI" , 14F , FontStyle . Bold ) , Color . Black ) );
+
+                  // Load data
+                  LoadActivityPieData ( chart );
+
+                  return chart;
+            }
+
+            private void LoadActivityPieData ( Chart chart )
+            {
+                  try
+                  {
+                        using ( SqlConnection conn = new SqlConnection ( connectionString ) )
+                        {
+                              conn . Open ( );
+                              SqlCommand cmd = new SqlCommand(@"
+                SELECT 
+                    at.ActivityName,
+                    COUNT(*) AS ActivityCount
+                FROM DailyActivities da
+                JOIN ActivityTypes at ON da.ActivityTypeID = at.ActivityTypeID
+                WHERE da.IsCalculated = 1
+                GROUP BY at.ActivityName", conn);
+
+                              SqlDataReader reader = cmd.ExecuteReader();
+                              Series series = chart.Series[0];
+
+                              Color[] colors = new Color[] {
+                Color.FromArgb(0, 120, 212),
+                Color.FromArgb(76, 175, 80),
+                Color.FromArgb(255, 152, 0),
+                Color.FromArgb(244, 67, 54),
+                Color.FromArgb(156, 39, 176),
+                Color.FromArgb(33, 150, 243)
+            };
+
+                              int colorIndex = 0;
+                              while ( reader . Read ( ) )
+                              {
+                                    string name = reader["ActivityName"].ToString();
+                                    int count = Convert.ToInt32(reader["ActivityCount"]);
+
+                                    DataPoint point = new DataPoint();
+                                    point . SetValueXY ( name , count );
+                                    point . Color = colors [ colorIndex % colors . Length ];
+                                    series . Points . Add ( point );
+
+                                    colorIndex++;
+                              }
+
+                              reader . Close ( );
+                        }
+                  }
+                  catch ( Exception ex )
+                  {
+                        MessageBox . Show ( $"Error loading pie chart: {ex . Message}" , "Error" ,
+                            MessageBoxButtons . OK , MessageBoxIcon . Error );
+                  }
+            }
 
             private void MainForm_Load ( object sender , EventArgs e )
             {
                   //ModernTheme . ApplyTheme ( this );
 
+                  // Set form size
+                  this . Size = new Size ( 1400 , 800 );
+                  this . StartPosition = FormStartPosition . CenterScreen;
+
+                  // Configure dashboard panel for scrolling
+                  dashboardPanel . AutoScroll = true;
+                  dashboardPanel . Dock = DockStyle . Fill;
+                  dashboardPanel . Padding = new Padding ( 20 );
+
+                  // Load dashboard data first
                   LoadDashboard ( );
-                  //AddDashboardChart ( );
+
+                  // Add all charts with optimized layout
+                  AddAllCharts ( );
+
+                  this . MinimumSize = new Size ( 1200 , 700 );
+
+                  // Anchor controls for resizing:
+                  dgvRecentActivities . Anchor = AnchorStyles . Top | AnchorStyles . Bottom |
+                                                AnchorStyles . Left | AnchorStyles . Right;
+
+                  dashboardPanel . Anchor = AnchorStyles . Top | AnchorStyles . Bottom |
+                                          AnchorStyles . Left | AnchorStyles . Right;
 
 
 

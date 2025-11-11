@@ -21,6 +21,7 @@
 
             private void InitializeComponent ( )
             {
+
                   this . lblTitle = new System . Windows . Forms . Label ( );
                   this . dgvStudents = new System . Windows . Forms . DataGridView ( );
                   this . btnDeactivate = new System . Windows . Forms . Button ( );

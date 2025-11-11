@@ -2,6 +2,7 @@
 using System . Collections . Generic;
 using System . Data;
 using System . Data . SqlClient;
+using System . Drawing;
 using System . Linq;
 using System . Text;
 using System . Threading . Tasks;
@@ -18,7 +19,13 @@ namespace StudentPointsSystem
             {
                   connectionString = connStr;
                   InitializeComponent ( );
-                  LoadStudents ( );
+
+
+                  AddSearchBox ( );
+
+                  LoadStudents ( );                 
+
+
             }
 
 
@@ -53,6 +60,59 @@ namespace StudentPointsSystem
                             MessageBoxButtons . OK , MessageBoxIcon . Error );
                   }
             }
+
+            private void AddSearchBox ( )
+            {
+                  // Create the search box
+                  TextBox txtSearch = new TextBox
+                  {
+                        Name = "txtSearch",
+                        Location = new Point(500, 40),  // position near top
+                        Size = new Size(300, 50),
+                        ForeColor = Color.Gray,
+                        Text = "Search students..."
+                  };
+
+                  // Optional: simple placeholder behavior
+                  txtSearch . GotFocus += ( s , e ) =>
+                  {
+                        if ( txtSearch . Text == "Search students..." )
+                        {
+                              txtSearch . Text = "";
+                              txtSearch . ForeColor = Color . Black;
+                        }
+                  };
+                  txtSearch . LostFocus += ( s , e ) =>
+                  {
+                        if ( string . IsNullOrWhiteSpace ( txtSearch . Text ) )
+                        {
+                              txtSearch . Text = "Search students...";
+                              txtSearch . ForeColor = Color . Gray;
+                        }
+                  };
+
+                  // ✅ Filter the DataGridView live as user types
+                  txtSearch . TextChanged += ( s , e ) =>
+                  {
+                        if ( txtSearch . Text == "Search students..." ) return;
+
+                        DataGridView dgvStudents = (DataGridView)this.Controls.Find("dgvStudents", true).FirstOrDefault();
+                        if ( dgvStudents?.DataSource is DataTable dt )
+                        {
+                              dt . DefaultView . RowFilter = string . Format (
+                                  "StudentName LIKE '%{0}%' OR Email LIKE '%{0}%'" ,
+                                  txtSearch . Text . Replace ( "'" , "''" )
+                              );
+                        }
+                  };
+
+                  // Add the TextBox to the form controls
+                  this . Controls . Add ( txtSearch );
+
+                  // Bring it to the front
+                  txtSearch . BringToFront ( );
+            }
+
 
             private void BtnDeactivate_Click ( object sender , EventArgs e )
             {
