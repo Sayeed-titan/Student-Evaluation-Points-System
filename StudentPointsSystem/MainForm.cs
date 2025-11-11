@@ -422,8 +422,8 @@ namespace StudentPointsSystem
                   //ModernTheme . ApplyTheme ( this );
 
                   // Set form size
-                  this . Size = new Size ( 1400 , 800 );
-                  this . StartPosition = FormStartPosition . CenterScreen;
+                  Size = new Size ( 1220 , 700 );
+                  StartPosition = FormStartPosition . CenterScreen;
 
                   // Configure dashboard panel for scrolling
                   dashboardPanel . AutoScroll = true;
