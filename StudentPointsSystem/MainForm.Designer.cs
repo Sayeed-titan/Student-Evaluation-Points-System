@@ -333,7 +333,7 @@ namespace StudentPointsSystem
                   this.titleLabel.Name = "titleLabel";
                   this.titleLabel.Size = new System.Drawing.Size(469, 32);
                   this.titleLabel.TabIndex = 0;
-                  this.titleLabel.Text = "Student Points Management Dashboard";
+                  this.titleLabel.Text = "Student Points Management Dashboard Software";
                   // 
                   // MainForm
                   // 

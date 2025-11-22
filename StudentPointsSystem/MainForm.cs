@@ -40,8 +40,6 @@ namespace StudentPointsSystem
                   dgvRecentActivities . DefaultCellStyle . SelectionForeColor = Color . White;
                   dgvRecentActivities . CellBorderStyle = DataGridViewCellBorderStyle . SingleHorizontal;
                   dgvRecentActivities . GridColor = Color . FromArgb ( 230 , 230 , 230 );
-
-
             }
 
             private void ApplyModernTheme ( )
@@ -341,23 +339,35 @@ namespace StudentPointsSystem
                   chart . BackColor = Color . White;
 
                   ChartArea area = new ChartArea();
+                  area . BackColor = Color . White;
                   chart . ChartAreas . Add ( area );
 
-                  Series series = new Series("DailyActivities");
+                  Series series = new Series("Activities");
                   series . ChartType = SeriesChartType . Pie;
+
+                  // Show percentage on the pie slices
                   series . IsValueShownAsLabel = true;
-                  series . Label = "#PERCENT{P0}";
-                  series . LegendText = "#VALX";
+                  series . Label = "#PERCENT{P1}"; // Show percentage with 1 decimal
+                  series [ "PieLabelStyle" ] = "Outside"; // Place labels outside pie
+
+                  // CRITICAL: This makes the legend show activity names
+                  series . LegendText = "#VALX (#VALY)"; // Shows "Activity Name (Count)"
+
                   chart . Series . Add ( series );
 
                   // Add Legend
                   Legend legend = new Legend();
                   legend . Docking = Docking . Right;
                   legend . Font = new Font ( "Segoe UI" , 9F );
+                  legend . Title = "Activities";
+                  legend . TitleFont = new Font ( "Segoe UI" , 10F , FontStyle . Bold );
                   chart . Legends . Add ( legend );
 
-                  chart . Titles . Add ( new Title ( "Activity Type Distribution" ,
-                      Docking . Top , new Font ( "Segoe UI" , 14F , FontStyle . Bold ) , Color . Black ) );
+                  // Title
+                  Title title = new Title("Activity Type Distribution");
+                  title . Font = new Font ( "Segoe UI" , 14F , FontStyle . Bold );
+                  title . Docking = Docking . Top;
+                  chart . Titles . Add ( title );
 
                   // Load data
                   LoadActivityPieData ( chart );
@@ -379,35 +389,59 @@ namespace StudentPointsSystem
                 FROM DailyActivities da
                 JOIN ActivityTypes at ON da.ActivityTypeID = at.ActivityTypeID
                 WHERE da.IsCalculated = 1
-                GROUP BY at.ActivityName", conn);
+                GROUP BY at.ActivityName
+                ORDER BY ActivityCount DESC", conn);
 
                               SqlDataReader reader = cmd.ExecuteReader();
                               Series series = chart.Series[0];
 
+                              // Modern, distinct color palette
                               Color[] colors = new Color[] {
-                Color.FromArgb(0, 120, 212),
-                Color.FromArgb(76, 175, 80),
-                Color.FromArgb(255, 152, 0),
-                Color.FromArgb(244, 67, 54),
-                Color.FromArgb(156, 39, 176),
-                Color.FromArgb(33, 150, 243)
+                Color.FromArgb(0, 120, 212),    // Blue
+                Color.FromArgb(76, 175, 80),    // Green
+                Color.FromArgb(255, 152, 0),    // Orange
+                Color.FromArgb(244, 67, 54),    // Red
+                Color.FromArgb(156, 39, 176),   // Purple
+                Color.FromArgb(33, 150, 243),   // Light Blue
+                Color.FromArgb(255, 193, 7),    // Amber
+                Color.FromArgb(96, 125, 139)    // Blue Grey
             };
 
                               int colorIndex = 0;
+                              bool hasData = false;
+
                               while ( reader . Read ( ) )
                               {
+                                    hasData = true;
                                     string name = reader["ActivityName"].ToString();
                                     int count = Convert.ToInt32(reader["ActivityCount"]);
 
+                                    // Create data point with name as X value
                                     DataPoint point = new DataPoint();
                                     point . SetValueXY ( name , count );
                                     point . Color = colors [ colorIndex % colors . Length ];
-                                    series . Points . Add ( point );
 
+                                    // Add border for better visibility
+                                    point . BorderColor = Color . White;
+                                    point . BorderWidth = 2;
+
+                                    // Custom label for this specific point (optional)
+                                    point . Label = "#PERCENT{P1}";
+                                    point . LegendText = name + " (" + count + ")";
+
+                                    series . Points . Add ( point );
                                     colorIndex++;
                               }
 
                               reader . Close ( );
+
+                              // Show message if no data
+                              if ( !hasData )
+                              {
+                                    series . Points . AddXY ( "No Data" , 1 );
+                                    series . Points [ 0 ] . Color = Color . LightGray;
+                                    series . Points [ 0 ] . Label = "No activities found";
+                              }
                         }
                   }
                   catch ( Exception ex )
@@ -416,6 +450,7 @@ namespace StudentPointsSystem
                             MessageBoxButtons . OK , MessageBoxIcon . Error );
                   }
             }
+
 
             private void MainForm_Load ( object sender , EventArgs e )
             {
@@ -445,6 +480,7 @@ namespace StudentPointsSystem
                   dashboardPanel . Anchor = AnchorStyles . Top | AnchorStyles . Bottom |
                                           AnchorStyles . Left | AnchorStyles . Right;
 
+                  NotificationHelper . ShowInfo ( "Welcome to Student Points System!" );
 
 
                   this . BackColor = Color . FromArgb ( 240 , 244 , 248 ); // Light gray-blue background
@@ -574,11 +610,17 @@ namespace StudentPointsSystem
                               adapter . Fill ( dt );
                               dgvRecentActivities . DataSource = dt;
                         }
+
+                        NotificationHelper . ShowSuccess ( "Dashboard loaded successfully!" );
+
                   }
                   catch ( Exception ex )
                   {
                         MessageBox . Show ( $"Error loading dashboard: {ex . Message}" , "Error" ,
                             MessageBoxButtons . OK , MessageBoxIcon . Error );
+
+                        NotificationHelper . ShowError ( $"Failed to load dashboard: {ex . Message}" );
+
                   }
 
             }

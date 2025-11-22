@@ -71,6 +71,9 @@ namespace StudentPointsSystem
                   {
                         this . DialogResult = DialogResult . OK;
                   }
+
+                  NotificationHelper . ShowSuccess ( "Activity saved successfully!" );
+
             }
 
             private void BtnSaveAndNew_Click ( object sender , EventArgs e )
@@ -79,6 +82,9 @@ namespace StudentPointsSystem
                   {
                         ClearForm ( );
                   }
+
+                  NotificationHelper . ShowSuccess ( "Activity saved successfully!" );
+
             }
 
             private bool SaveActivity ( )

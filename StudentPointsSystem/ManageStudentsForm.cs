@@ -210,6 +210,39 @@ namespace StudentPointsSystem
                   }
             }
 
+
+
+            private void LoadStudents ( )
+            {
+                  try
+                  {
+                        using ( SqlConnection conn = new SqlConnection ( connectionString ) )
+                        {
+                              conn . Open ( );
+                              SqlDataAdapter adapter = new SqlDataAdapter(@"
+                        SELECT StudentID, StudentName, Email, PhoneNumber, JoinDate, 
+                               CASE WHEN IsActive = 1 THEN 'Active' ELSE 'Inactive' END AS Status
+                        FROM Students
+                        ORDER BY StudentName", conn);
+
+                              DataTable dt = new DataTable();
+                              adapter . Fill ( dt );
+
+                              dgvStudents . DataSource = dt;
+
+                              if ( dgvStudents . Columns . Count > 0 )
+                              {
+                                    dgvStudents . Columns [ "StudentID" ] . Visible = false;
+                              }
+                        }
+                  }
+                  catch ( Exception ex )
+                  {
+                        MessageBox . Show ( $"Error loading students: {ex . Message}" , "Error" ,
+                            MessageBoxButtons . OK , MessageBoxIcon . Error );
+                  }
+            }
+
             private void UpdateStudent ( int studentId , string name , string email , string phone , bool isActive )
             {
                   if ( string . IsNullOrWhiteSpace ( name ) )
@@ -320,85 +353,6 @@ namespace StudentPointsSystem
                   }
             }
 
-            private void LoadStudents ( )
-            {
-                  try
-                  {
-                        using ( SqlConnection conn = new SqlConnection ( connectionString ) )
-                        {
-                              conn . Open ( );
-                              SqlDataAdapter adapter = new SqlDataAdapter(@"
-                        SELECT StudentID, StudentName, Email, PhoneNumber, JoinDate, 
-                               CASE WHEN IsActive = 1 THEN 'Active' ELSE 'Inactive' END AS Status
-                        FROM Students
-                        ORDER BY StudentName", conn);
-
-                              DataTable dt = new DataTable();
-                              adapter . Fill ( dt );
-
-                              dgvStudents . DataSource = dt;
-
-                              if ( dgvStudents . Columns . Count > 0 )
-                              {
-                                    dgvStudents . Columns [ "StudentID" ] . Visible = false;
-                              }
-                        }
-                  }
-                  catch ( Exception ex )
-                  {
-                        MessageBox . Show ( $"Error loading students: {ex . Message}" , "Error" ,
-                            MessageBoxButtons . OK , MessageBoxIcon . Error );
-                  }
-            }
-
-            private void AddSearchBox ( )
-            {
-                  // Create the search box
-                  TextBox txtSearch = new TextBox
-                  {
-                        Name = "txtSearch",
-                        Location = new Point(500, 40),
-                        Size = new Size(300, 50),
-                        ForeColor = Color.Gray,
-                        Text = "Search students..."
-                  };
-
-                  // Placeholder behavior
-                  txtSearch . GotFocus += ( s , e ) =>
-                  {
-                        if ( txtSearch . Text == "Search students..." )
-                        {
-                              txtSearch . Text = "";
-                              txtSearch . ForeColor = Color . Black;
-                        }
-                  };
-                  txtSearch . LostFocus += ( s , e ) =>
-                  {
-                        if ( string . IsNullOrWhiteSpace ( txtSearch . Text ) )
-                        {
-                              txtSearch . Text = "Search students...";
-                              txtSearch . ForeColor = Color . Gray;
-                        }
-                  };
-
-                  // Filter as user types
-                  txtSearch . TextChanged += ( s , e ) =>
-                  {
-                        if ( txtSearch . Text == "Search students..." ) return;
-
-                        if ( dgvStudents?.DataSource is DataTable dt )
-                        {
-                              dt . DefaultView . RowFilter = string . Format (
-                                  "StudentName LIKE '%{0}%' OR Email LIKE '%{0}%'" ,
-                                  txtSearch . Text . Replace ( "'" , "''" )
-                              );
-                        }
-                  };
-
-                  this . Controls . Add ( txtSearch );
-                  txtSearch . BringToFront ( );
-            }
-
             private void BtnDeactivate_Click ( object sender , EventArgs e )
             {
                   UpdateStudentStatus ( false );
@@ -449,5 +403,54 @@ namespace StudentPointsSystem
                         }
                   }
             }
+
+          private void AddSearchBox ( )
+                  {
+                        // Create the search box
+                        TextBox txtSearch = new TextBox
+                        {
+                              Name = "txtSearch",
+                              Location = new Point(500, 40),
+                              Size = new Size(300, 50),
+                              ForeColor = Color.Gray,
+                              Text = "Search students..."
+                        };
+
+                        // Placeholder behavior
+                        txtSearch . GotFocus += ( s , e ) =>
+                        {
+                              if ( txtSearch . Text == "Search students..." )
+                              {
+                                    txtSearch . Text = "";
+                                    txtSearch . ForeColor = Color . Black;
+                              }
+                        };
+                        txtSearch . LostFocus += ( s , e ) =>
+                        {
+                              if ( string . IsNullOrWhiteSpace ( txtSearch . Text ) )
+                              {
+                                    txtSearch . Text = "Search students...";
+                                    txtSearch . ForeColor = Color . Gray;
+                              }
+                        };
+
+                        // Filter as user types
+                        txtSearch . TextChanged += ( s , e ) =>
+                        {
+                              if ( txtSearch . Text == "Search students..." ) return;
+
+                              if ( dgvStudents?.DataSource is DataTable dt )
+                              {
+                                    dt . DefaultView . RowFilter = string . Format (
+                                        "StudentName LIKE '%{0}%' OR Email LIKE '%{0}%'" ,
+                                        txtSearch . Text . Replace ( "'" , "''" )
+                                    );
+                              }
+                        };
+
+                        this . Controls . Add ( txtSearch );
+                        txtSearch . BringToFront ( );
+                  }
+
       }
 }
